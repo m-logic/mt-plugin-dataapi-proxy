@@ -26,7 +26,7 @@ sub dataapi {
     $app->start_session($author, 0) if $author; # remember: 0
 
     my $auth = MT::DataAPI::Endpoint::Auth::authentication($app);
-    $ENV{HTTP_X_MT_Authorization} = 'MTAuth accessToken=' . $auth->{accessToken}
+    $ENV{HTTP_X_MT_AUTHORIZATION} = 'MTAuth accessToken=' . $auth->{accessToken}
         if ($auth && exists $auth->{accessToken});
 
     my $result = $app->api(@_);
