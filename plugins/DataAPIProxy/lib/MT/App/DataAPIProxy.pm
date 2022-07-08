@@ -13,9 +13,7 @@ sub init {
     $app->SUPER::init(@_) or return;
     # register data_api callbacks
     MT::App::DataAPI->init_plugins() or return;
-    $app->add_methods(
-        dataapi => \&dataapi,
-    );
+    $app->add_methods( dataapi => \&dataapi, );
     $app->{template_dir} = 'data_api';
     $app->{default_mode} = 'dataapi';
     $app;
@@ -31,23 +29,23 @@ sub dataapi {
     if ($author) {
         if ( MT->version_number < 7 || $author->can_sign_in_data_api ) {
             if (DEBUG) {
-                MT->log('DataAPIProxy: user:'. $author->name);
+                MT->log( 'DataAPIProxy: user:' . $author->name );
             }
-            $app->start_session($author, 0);
+            $app->start_session( $author, 0 );
             $session = $app->{session}
                 or return $app->error( 'Invalid login', 401 );
             if (DEBUG) {
-                MT->log('created temporary session:' . $session->id);
+                MT->log( 'created temporary session:' . $session->id );
             }
             $access_token = MT::DataAPI::Endpoint::Auth::make_access_token( $app, $session );
             if (DEBUG) {
-                MT->log('created temporary token:' . $access_token->id) if $access_token;
+                MT->log( 'created temporary token:' . $access_token->id ) if $access_token;
             }
             $ENV{HTTP_X_MT_AUTHORIZATION} = 'MTAuth accessToken=' . $access_token->id if $access_token;
         }
         else {
             if (DEBUG) {
-                MT->log('DataAPIProxy: sign-in prohibited');
+                MT->log('DataAPIProxy: api access prohibited');
             }
         }
     }
@@ -61,13 +59,14 @@ sub dataapi {
     my $result = $app->api(@_);
     my $endpoint_id = ( $app->current_endpoint || {} )->{id} || '';
     if (DEBUG) {
-        MT->log('endpoint: '. $endpoint_id);
+        MT->log( 'endpoint: ' . $endpoint_id );
     }
     if ($access_token) {
         MT::DataAPI::Endpoint::Auth::revoke_token($app);
         if (DEBUG) {
             MT->log('delete temporary token');
         }
+
         # leave session as-is if dataapi made another token.
         $session->remove unless $endpoint_id eq 'authenticate';
         if (DEBUG) {
