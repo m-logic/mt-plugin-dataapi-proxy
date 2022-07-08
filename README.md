@@ -5,7 +5,7 @@ This plugin enables users to access Movable Type Data API using current login-se
 ## Requirements
 
 * Movable Type 6.+
-* Movable Type 7.0
+* Movable Type 7
 
 ## Installation
 
@@ -20,4 +20,4 @@ The MIT License (MIT)
 
 The following copyright notice applies to all the files provided in this distribution, including binary files, unless explicitly noted otherwise.
 
-Copyright 2016 M-Logic, Inc.
+Copyright © 2022 M-Logic, Inc.
