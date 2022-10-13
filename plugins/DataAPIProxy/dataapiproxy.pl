@@ -14,7 +14,7 @@ dataapiproxy.cgi/v2/sites/1/entries?search=test
 =cut
 
 my $PLUGIN_NAME = 'DataAPIProxy';
-my $VERSION = '0.91';
+my $VERSION = '0.92';
 my $plugin = new MT::Plugin::DataAPIProxy({
     name => $PLUGIN_NAME,
     version => $VERSION,
@@ -43,6 +43,7 @@ if (MT->version_number >= 6) { # required MT6
     no warnings 'redefine';
     $saved_init_plugins = \&MT::App::DataAPI::init_plugins;
     *MT::App::DataAPI::init_plugins = sub {
+        return 1 if $_[0]->id eq 'dataapiproxy';
         # hack to avoid double initialization...
         return 1 if $is_data_api_initialized;
         $is_data_api_initialized = 1;
