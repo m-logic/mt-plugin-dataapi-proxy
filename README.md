@@ -4,8 +4,9 @@ This plugin enables users to access Movable Type Data API using current login-se
 
 ## Requirements
 
-* Movable Type 6.+
+* Movable Type 6
 * Movable Type 7
+* Movable Type 8(Developer Preview / RC)
 
 ## Installation
 
