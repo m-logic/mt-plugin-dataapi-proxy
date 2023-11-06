@@ -2,17 +2,15 @@ package MT::App::DataAPIProxy;
 
 use strict;
 use base 'MT::App::DataAPI';
-use MT::DataAPI::Endpoint::Auth;
 
 use constant DEBUG => 0;
 
 sub id {'dataapiproxy'}
 
-sub init {
+sub init_request {
     my $app = shift;
-    $app->SUPER::init(@_) or return;
-    # register data_api callbacks
-    MT::App::DataAPI->init_plugins() or return;
+    $app->SUPER::init_request(@_);
+    $app->set_no_cache;
     $app->add_methods( dataapi => \&dataapi, );
     $app->{template_dir} = 'data_api';
     $app->{default_mode} = 'dataapi';
@@ -23,6 +21,10 @@ sub dataapi {
     my $app = shift;
 
     my $mtapp = MT::App->new;
+    # ensure session_credentials
+    $mtapp->user(undef);
+    delete $mtapp->{cookies}; 
+    #
     my ($author) = $mtapp->login;
     my $access_token;
     my $session;
@@ -37,7 +39,13 @@ sub dataapi {
             if (DEBUG) {
                 MT->log( 'created temporary session:' . $session->id );
             }
-            $access_token = MT::DataAPI::Endpoint::Auth::make_access_token( $app, $session );
+            $access_token = $app->model('accesstoken')->new;
+            $access_token->set_values({
+                id => $app->make_magic_token,
+                session_id => $session->id,
+                start => time,
+            });
+            $access_token->save;
             if (DEBUG) {
                 MT->log( 'created temporary token:' . $access_token->id ) if $access_token;
             }
