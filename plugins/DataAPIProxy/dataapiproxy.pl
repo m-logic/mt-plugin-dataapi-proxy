@@ -15,7 +15,7 @@ dataapiproxy.cgi/v2/sites/1/entries?search=test
 =cut
 
 my $PLUGIN_NAME = 'DataAPIProxy';
-my $VERSION = '0.95';
+my $VERSION = '1.0';
 my $plugin = new MT::Plugin::DataAPIProxy({
     name => $PLUGIN_NAME,
     version => $VERSION,
@@ -23,19 +23,7 @@ my $plugin = new MT::Plugin::DataAPIProxy({
     author_link => 'http://m-logic.co.jp/',
 });
 
-my $saved_init_plugins;
-my $is_data_api_initialized = 0;
-if (MT->version_number >= 6) { # required MT6
-    require MT::App::DataAPI;
-    no warnings 'once';
-    no warnings 'redefine';
-    $saved_init_plugins = \&MT::App::DataAPI::init_plugins;
-    *MT::App::DataAPI::init_plugins = sub {
-        # hack to avoid double initialization...
-        return 1 if $is_data_api_initialized;
-        $is_data_api_initialized = 1;
-        &$saved_init_plugins(@_);
-    };
+if (MT->version_number >= 7) { # required MT7
     MT->add_plugin($plugin);
 }
 
@@ -43,6 +31,9 @@ sub instance { $plugin; }
 
 sub init_registry {
     my $plugin = shift;
+    require MT::DataAPI::Format;
+    require MT::DataAPI::Resource;
+    require MT::Import;
     $plugin->registry({
         config_settings => {
             DataAPIProxyScript => {
@@ -53,6 +44,16 @@ sub init_registry {
             dataapiproxy => {
                 handler => 'MT::App::DataAPIProxy',
                 script => sub { MT->config->DataAPIProxyScript },
+                methods   => sub { MT->app->core_methods() },
+                endpoints => sub { MT->app->core_endpoints() },
+                resources => sub { MT::DataAPI::Resource->core_resources() },
+                formats   => sub { MT::DataAPI::Format->core_formats() },
+                default_format => 'json',
+                query_builder =>
+                    '$Core::MT::DataAPI::Endpoint::Common::query_builder',
+                # This is for search endpoint.
+                default        => sub { MT->app->core_parameters() },
+                import_formats => sub { MT::Import->core_import_formats() },
             },
         },
     });
