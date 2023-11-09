@@ -7,10 +7,9 @@ use constant DEBUG => 0;
 
 sub id {'dataapiproxy'}
 
-sub init_request {
+sub init {
     my $app = shift;
-    $app->SUPER::init_request(@_);
-    $app->set_no_cache;
+    $app->SUPER::init(@_) or return;
     $app->add_methods( dataapi => \&dataapi, );
     $app->{template_dir} = 'data_api';
     $app->{default_mode} = 'dataapi';
