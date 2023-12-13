@@ -15,7 +15,7 @@ dataapiproxy.cgi/v2/sites/1/entries?search=test
 =cut
 
 my $PLUGIN_NAME = 'DataAPIProxy';
-my $VERSION = '1.0.1';
+my $VERSION = '1.01';
 my $plugin = new MT::Plugin::DataAPIProxy({
     name => $PLUGIN_NAME,
     version => $VERSION,
