@@ -25,30 +25,59 @@ sub dataapi {
     delete $mtapp->{cookies}; 
     #
     my ($author) = $mtapp->login;
+    my ($mtsession) = $mtapp->session;
     my $access_token;
     my $session;
-    if ($author) {
+    if ($author && $mtsession) {
         if ( MT->version_number < 7 || $author->can_sign_in_data_api ) {
             if (DEBUG) {
                 MT->log( 'DataAPIProxy: user:' . $author->name );
             }
-            $app->start_session( $author, 0 );
+            my $session_id = $mtsession->get('dataapiproxy_session');
+            my $session_created = 0;
+            if ($session_id) {
+                $app->session_user( $author, $session_id );
+            }
+            if (!$app->{session}) {
+                $app->start_session( $author, 0 );
+                $session_created = 1;
+            }
             $session = $app->{session}
                 or return $app->error( 'Invalid login', 401 );
-            if (DEBUG) {
-                MT->log( 'created temporary session:' . $session->id );
+            $session_id = $session->id;
+            if ($session_created) {
+                $mtsession->set('dataapiproxy_session', $session_id );
+                $mtsession->save;
             }
-            $access_token = $app->model('accesstoken')->new;
+            if (DEBUG) {
+                if ($session_created) {
+                    MT->log( 'created dataapi session:' . $session_id );
+                }
+                else {
+                    MT->log( 'load dataapi session:' . $session_id );
+                }
+            }
+            my $access_token_created = 0;
+            $access_token = $app->model('accesstoken')->load({session_id => $session_id});
+            if (!$access_token) {
+                my $token_id = $app->make_magic_token;
+                $access_token = $app->model('accesstoken')->new;
+                $access_token->id($token_id);
+            }
             $access_token->set_values({
-                id => $app->make_magic_token,
-                session_id => $session->id,
+                session_id => $session_id,
                 start => time,
             });
             $access_token->save;
             if (DEBUG) {
-                MT->log( 'created temporary token:' . $access_token->id ) if $access_token;
+                if ($access_token_created) {
+                    MT->log( 'created accesstoken:' . $access_token->id );
+                }
+                else {
+                    MT->log( 're-use accesstoken:' . $access_token->id );
+                }
             }
-            $ENV{HTTP_X_MT_AUTHORIZATION} = 'MTAuth accessToken=' . $access_token->id if $access_token;
+            $ENV{HTTP_X_MT_AUTHORIZATION} = 'MTAuth accessToken=' . $access_token->id;
         }
         else {
             if (DEBUG) {
@@ -62,23 +91,12 @@ sub dataapi {
         }
     }
 
-    $app->request( 'data_api_current_client_id', 'DataAPIProxy' );
+    my $clientId = $app->param('clientId') || 'DataAPIProxy';
+    $app->request( 'data_api_current_client_id', $clientId );
     my $result = $app->api(@_);
     my $endpoint_id = ( $app->current_endpoint || {} )->{id} || '';
     if (DEBUG) {
         MT->log( 'endpoint: ' . $endpoint_id );
-    }
-    if ($access_token) {
-        MT::DataAPI::Endpoint::Auth::revoke_token($app);
-        if (DEBUG) {
-            MT->log('delete temporary token');
-        }
-
-        # leave session as-is if dataapi made another token.
-        $session->remove unless $endpoint_id eq 'authenticate';
-        if (DEBUG) {
-            MT->log('delete temporary session') unless $endpoint_id eq 'authenticate';
-        }
     }
     $mtapp->takedown();
 
