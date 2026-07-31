@@ -23,7 +23,7 @@ my $plugin                    = new MT::Plugin::DataAPIProxy(
         name        => $PLUGIN_NAME,
         version     => $VERSION,
         author_name => 'M-Logic, Inc.',
-        author_link => 'http://m-logic.co.jp/',
+        author_link => 'https://m-logic.co.jp/',
     }
 );
 
