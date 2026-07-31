@@ -140,6 +140,8 @@ sub dataapi {
     my $app = shift;
 
     my ( $author, $mtsession ) = _cms_session($app);
+    my $disable_anonymous_access =
+      MT::Plugin::DataAPIProxy::disable_anonymous_access();
     delete $app->{session};
     my $access_token;
     my $session;
@@ -226,10 +228,14 @@ sub dataapi {
         }
         else {
             MT::Util::Log->info('DataAPIProxy: api access prohibited') if DEBUG;
+            return $app->error( 'Forbidden', 403 )
+              if $disable_anonymous_access;
         }
     }
     else {
         MT::Util::Log->info('DataAPIProxy: anonymous user access') if DEBUG;
+        return $app->error( 'Forbidden', 403 )
+          if $disable_anonymous_access;
     }
 
     my $clientId = $app->param('clientId') || 'DataAPIProxy';

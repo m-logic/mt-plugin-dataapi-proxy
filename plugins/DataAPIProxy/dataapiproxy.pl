@@ -14,9 +14,11 @@ mt-data-api.cgi/v2/sites/1/entries?search=test
 dataapiproxy.cgi/v2/sites/1/entries?search=test
 =cut
 
-my $PLUGIN_NAME = 'DataAPIProxy';
-my $VERSION     = '1.1';
-my $plugin      = new MT::Plugin::DataAPIProxy(
+my $PLUGIN_NAME               = 'DataAPIProxy';
+my $VERSION                   = '1.1';
+my $DISABLE_ANONYMOUS_CONFIG  = 'DataAPIProxyDisableAnonymousAccess';
+my $DISABLE_ANONYMOUS_SETTING = 'disable_anonymous_access';
+my $plugin                    = new MT::Plugin::DataAPIProxy(
     {
         name        => $PLUGIN_NAME,
         version     => $VERSION,
@@ -72,6 +74,32 @@ if ( MT->version_number >= 7 ) {
 
 sub instance { $plugin; }
 
+sub disable_anonymous_access {
+    my $config = MT->config;
+    return $config->DataAPIProxyDisableAnonymousAccess ? 1 : 0
+      if $config->is_readonly($DISABLE_ANONYMOUS_CONFIG);
+
+    return $plugin->get_config_value( $DISABLE_ANONYMOUS_SETTING, 'system' )
+      ? 1
+      : 0;
+}
+
+sub system_config_template {
+    my ( $plugin, $param ) = @_;
+    my $config   = MT->config;
+    my $readonly = $config->is_readonly($DISABLE_ANONYMOUS_CONFIG) ? 1 : 0;
+    my $stored   = $param->{$DISABLE_ANONYMOUS_SETTING}            ? 1 : 0;
+
+    $param->{disable_anonymous_access_readonly} = $readonly;
+    $param->{disable_anonymous_access_stored}   = $stored;
+    $param->{disable_anonymous_access_effective} =
+      $readonly
+      ? ( $config->DataAPIProxyDisableAnonymousAccess ? 1 : 0 )
+      : $stored;
+
+    return $plugin->load_tmpl('system_config.tmpl');
+}
+
 sub init_registry {
     my $plugin = shift;
     require MT::DataAPI::Format;
@@ -83,8 +111,16 @@ sub init_registry {
                 DataAPIProxyScript => {
                     default => 'dataapiproxy.cgi',
                 },
+                DataAPIProxyDisableAnonymousAccess => {},
             },
-            applications => {
+            settings => {
+                disable_anonymous_access => {
+                    scope   => 'system',
+                    default => 0,
+                },
+            },
+            system_config_template => \&system_config_template,
+            applications           => {
                 dataapiproxy => {
                     handler   => 'MT::App::DataAPIProxy',
                     script    => sub { MT->config->DataAPIProxyScript },
