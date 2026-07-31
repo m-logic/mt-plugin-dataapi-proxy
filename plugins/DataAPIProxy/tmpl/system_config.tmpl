@@ -1,0 +1,20 @@
+<mtapp:setting
+  id="dataapiproxy-disable-anonymous-access-setting"
+  label="アクセス制限"
+  label_for="dataapiproxy-disable-anonymous-access">
+  <mt:if name="disable_anonymous_access_readonly">
+    <input type="hidden" name="disable_anonymous_access" value="<mt:if name="disable_anonymous_access_stored">1<mt:else>0</mt:if>" />
+  </mt:if>
+  <div class="custom-control custom-checkbox form-check">
+    <input
+      type="checkbox"
+      name="disable_anonymous_access"
+      id="dataapiproxy-disable-anonymous-access"
+      class="custom-control-input form-check-input"
+      value="1"
+      <mt:if name="disable_anonymous_access_effective">checked="checked"</mt:if>
+      <mt:if name="disable_anonymous_access_readonly">disabled="disabled"</mt:if>
+    />
+    <label class="custom-control-label form-check-label" for="dataapiproxy-disable-anonymous-access">MTのセッションを取得できないアクセスはエラーとする</label>
+  </div>
+</mtapp:setting>
