@@ -100,6 +100,11 @@ sub system_config_template {
     return $plugin->load_tmpl('system_config.tmpl');
 }
 
+sub save_config_filter {
+    MT->instance->{do_reboot} = 1;
+    return 1;
+}
+
 sub init_registry {
     my $plugin = shift;
     require MT::DataAPI::Format;
@@ -120,7 +125,10 @@ sub init_registry {
                 },
             },
             system_config_template => \&system_config_template,
-            applications           => {
+            callbacks              => {
+                'save_config_filter.' . $PLUGIN_NAME => \&save_config_filter,
+            },
+            applications => {
                 dataapiproxy => {
                     handler   => 'MT::App::DataAPIProxy',
                     script    => sub { MT->config->DataAPIProxyScript },
