@@ -105,11 +105,41 @@ sub session_user {
     MT::App::session_user(@_);
 }
 
+sub _cms_session {
+    my ($app) = @_;
+
+    my %param_exists = map { $_ => 1 } $app->multi_param;
+    my %credentials;
+    for my $name (qw( username password )) {
+        $credentials{$name} = [ $app->multi_param($name) ]
+          if $param_exists{$name};
+        $app->delete_param($name);
+    }
+
+    my ( $author, $mtsession, $error );
+    {
+        local $@;
+        eval {
+            ($author)    = MT::App::login($app);
+            ($mtsession) = MT::App::session($app);
+            1;
+        } or $error = $@;
+    }
+
+    for my $name (qw( username password )) {
+        $app->delete_param($name);
+        $app->param( $name, @{ $credentials{$name} } )
+          if $param_exists{$name};
+    }
+
+    die $error if defined $error;
+    return ( $author, $mtsession );
+}
+
 sub dataapi {
     my $app = shift;
 
-    my ($author)    = MT::App::login($app);
-    my ($mtsession) = MT::App::session($app);
+    my ( $author, $mtsession ) = _cms_session($app);
     delete $app->{session};
     my $access_token;
     my $session;
