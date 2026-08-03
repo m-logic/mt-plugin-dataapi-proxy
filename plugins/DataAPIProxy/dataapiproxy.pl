@@ -121,7 +121,7 @@ sub init_registry {
             settings => {
                 disable_anonymous_access => {
                     scope   => 'system',
-                    default => 0,
+                    default => 1,
                 },
             },
             system_config_template => \&system_config_template,
