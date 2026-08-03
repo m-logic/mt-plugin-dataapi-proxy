@@ -15,7 +15,7 @@ dataapiproxy.cgi/v2/sites/1/entries?search=test
 =cut
 
 my $PLUGIN_NAME               = 'DataAPIProxy';
-my $VERSION                   = '1.1';
+my $VERSION                   = '1.11';
 my $DISABLE_ANONYMOUS_CONFIG  = 'DataAPIProxyDisableAnonymousAccess';
 my $DISABLE_ANONYMOUS_SETTING = 'disable_anonymous_access';
 my $plugin                    = new MT::Plugin::DataAPIProxy(
@@ -121,7 +121,7 @@ sub init_registry {
             settings => {
                 disable_anonymous_access => {
                     scope   => 'system',
-                    default => 0,
+                    default => 1,
                 },
             },
             system_config_template => \&system_config_template,
