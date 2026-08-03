@@ -139,6 +139,9 @@ sub _cms_session {
 sub dataapi {
     my $app = shift;
 
+    return $app->error( 'DataAPIProxy plugin is not loaded.', 503 )
+      unless MT::Plugin::DataAPIProxy->can('disable_anonymous_access');
+
     my ( $author, $mtsession ) = _cms_session($app);
     my $disable_anonymous_access =
       MT::Plugin::DataAPIProxy::disable_anonymous_access();
